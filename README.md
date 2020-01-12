@@ -2,17 +2,18 @@
 <img src="docs/thumb.png" width="300">
 </p>
 
-# GO SQS API WORKER
+# Desafio Maxmilhas, por Patrick Pádua
 
 ## Descrição
 
-Este exemplo mostra a utilização de uma API que envia dados para uma fila do AWS SQS, enquanto um worker alimenta o banco de dados.
+O desafio proposto foi: 
+
+"Desenvolver e hospedar uma API Rest para captura de sugestões. As sugestões enviadas deverão ser enviadas para uma Queue SQS. Deverá existir uma aplicação Worker que consome as mensagens do SQS e armazena no MongoDB."
 
 ## Linguagem
 
-Foi escolhida a linguagem GO pela alta performance, simplicidade de leitura e poderoso recurso de concorrência com as goroutines.
-Isso permite que mesmo que o worker demore mais tempo para processar um lote de mensagens de uma fila, uma nova goroutine será disparada
-no tempo exato, sem atrapalhar o desempenho do sistema.
+Diante de vários exemplos encontrados na internet, foi escolhido um exemplo em linguagem GO.
+Após bateria de testes, este exemplo apresentou boa performance, simplicidade de leitura e bons recursos, atendendo ao desafio.
 
 ## Funcionalidades
 
@@ -51,11 +52,19 @@ Fluxo da Informação
 
 # Instalação
 
-Este guia de instalação e execução presumime que você o esteja executando em um sistema operacional Linux atualizado, com a plataforma Docker instalada. Mais informações de como instalar o Docker no Linux, **[clique aqui](https://docs.docker.com/)**
+Requisitos: 
+Sistema operacional:  Ubuntu 18.04.03 LTS  **[clique aqui](https://ubuntu.com/download)**
+Docker e Docker-compose instalado.  **[clique aqui](https://docs.docker.com/)**
+Terraform instalado  **[clique aqui](https://www.terraform.io/downloads.html)**
+Conta na AWS **[clique aqui](https://aws.amazon.com/pt/)**
+Instalar o AWS CLI **[clique aqui](https://docs.aws.amazon.com/pt_br/cli/latest/userguide/install-linux.html)**
+Configurar o AWS CLI **[clique aqui](https://docs.aws.amazon.com/pt_br/cli/latest/userguide/cli-chap-configure.html)**
 
-Primeiramente crie os usuários do Terraform e da Aplicação com as seguintes permissões:
+Obs: Este exemplo foi desenvolvido na  zona "us-east-1" (Leste dos EUA (Norte da Virgínia)). 
 
-**Usuário do Terraform**
+1) Acessar a AWS/IAM e criar 2 usuarios (terraform e aplicacao) e conceder politicas de segurança, conforme a seguir:
+
+**Usuário: terraform**
 
 ```
 {
@@ -84,9 +93,9 @@ Primeiramente crie os usuários do Terraform e da Aplicação com as seguintes p
                 "sqs:SetQueueAttributes"
             ],
             "Resource": [
-                "arn:aws:s3:::exemplo-sqs-terraform/*",
-                "arn:aws:s3:::exemplo-sqs-terraform",
-                "arn:aws:sqs:*:*:exemplo-sqs-terraform.fifo"
+                "arn:aws:s3:::Desafio-Maxmilhas-Patrick/*",
+                "arn:aws:s3:::Desafio-Maxmilhas-Patrick",
+                "arn:aws:sqs:*:*:Desafio-Maxmilhas-Patrick.fifo"
             ]
         },
         {
@@ -98,7 +107,7 @@ Primeiramente crie os usuários do Terraform e da Aplicação com as seguintes p
 }
 ```
 
-Usuário da Aplicação
+**Usuário: aplicacao**
 
 ```
 {
@@ -110,10 +119,10 @@ Usuário da Aplicação
                 "sqs:DeleteMessage",
                 "sqs:DeleteMessage",
                 "sqs:SendMessage",
-                "ReceiveMessage"
+                "sqs:ReceiveMessage"
             ],
             "Resource": [
-                "arn:aws:sqs:*:*:exemplo-sqs-terraform.fifo"
+                "arn:aws:sqs:*:*:Desafio-Maxmilhas-Patrick.fifo"
             ]
         },
         {
@@ -125,15 +134,21 @@ Usuário da Aplicação
 }
 ```
 
-Ao gerar o Access Key e Secret Access Key de cada conta, substitua os valores referentes nos arquivos **terraform-compose.yml** nos campos *ARG_AWS_ACCESS_KEY_ID* e *ARG_AWS_SECRET_ACCESS_KEY* e no arquivo **service-compose.yml** nos campos *AWS_ACCESS_KEY_ID* e *AWS_ACCESS_KEY_ID* dos serviços api e worker.
+2) Acessar o "AWS Systems Manager" > "Parameter Store" e criar 4 parêmetros do tipo string com os valores conforme a seguir:
 
-Caso queira alterar o comando do terraform, edite o arquivo **terraform-compose.yml**.
+ARG_ACCESS_KEY_ID = (Colocar o Access Key ID do usuario terraform)
+ARG_SECRET_ACCESS_KEY = (Colocar o Secret Key ID do usuario terraform)
+ACCESS_KEY_ID = (Colocar o Access Key ID do usuario aplicacao)
+SECRET_ACCESS_KEY = (Colocar o Secret Key ID do usuario aplicacao)
 
-Crie um bucket no S3 com o mesmo nome definido na configuração do terraform backend do arquivo **terraform-compose.yml**.
-
-Agora vamos colocar o sistema para funcionar!
+3) Crie um bucket no S3 com o nome "Desafio-Maxmilhas-Patrick" com o comando abaixo:
 
 ```
+aws s3 mb s3://Desafio-Maxmilhas-Patrick
+```
+
+4) Executar o comando: 
+
 make service
 ```
 
@@ -141,20 +156,15 @@ Com o comando acima, executaremos o docker-compose fazendo o build da API, Worke
 verifica se o endpoint definido existe e consome o valor que o Consul provê. 
 
 ```
+5) Executar o comando: 
+
 make infra
 ```
 
 Este comando iniciará o docker-compose de uma imagem do Terraform, ele executará os comandos definidos no terraform-compose.yml. Fique atento a definir as chaves com as permissões necessárias para criação das filas.
 Após a execução do comando terraform apply padrão no arquivo, ele irá enviar os dados a URL da fila SQS e o GroupID das mensagens para a API do consul em endpoints definidos. Os serviços que antes não conseguiam subir, agora já fazem requisições a cada chamada. 
 
-
-O comando abaixo para e remove os containers e as imagens criadas. Mas faça os testes antes! =)
-
-```
-make clean
-```
-
-# Testes
+# 6) Testes
 
 Nossa API estará ativa no endereço http://localhost:8080
 
@@ -176,18 +186,16 @@ Este endpoint envia as sugestões para uma fila SQS, o serviço do Worker fará 
 
 ```
 {
-	"message": "sample-message",
-	"user"   : "anon"
+	"message": "Digite uma mensagem qualquer",
+	"user"   : "Digite um usuario qualquer"
 }
 ```
 
 # Troubleshoot
 
-**ERROR: for real_terraform_1  Cannot start service terraform: error while creating mount source path '/path/terraform/output': mkdir /host_mnt/c: file exists**
+Pode ser necessario rodar o comando "docker start Desafio_worker_1" caso não tenha container na porta 8080 em execução.
 
-Em alguns casos utilizando o WSL, é necessário recriar a ligação entre host e containers no Docker for Desktop.
-Para isso, clique com o botão direito no ícone do Docker na barra de tarefas, vá em *Settings* -> *Shared Drives* -> Desmarque as opções de compatilhamento de disco, clique em Apply, marque novamente as opções de compartilhamento, clique em Apply.
-
-**Error inspecting states in the "s3" backend: AccessDenied: Access Denied**
-
-Verifique se o caminho do bucket informado nas permissões do usuário do Terraform são os mesmos informados no arquivo **terraform/main.tf**
+7) Para exclui a aplicação e limpar o ambiente, basta executar o comando abaixo.
+```
+make clean
+```

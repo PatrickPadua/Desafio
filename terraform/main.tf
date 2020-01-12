@@ -4,7 +4,7 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket = "exemplo-sqs-terraform-patrick"
+    bucket = "Desafio-Maxmilhas-Patrick"
     key    = "terraform.tfstate"
     region = "us-east-1"
   }

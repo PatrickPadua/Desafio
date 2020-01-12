@@ -3,7 +3,7 @@ variable "aws_region" {
 }
 
 variable "aws_sqs_name" {
-    default = "exemplo-sqs-terraform-patrick"
+    default = "Desafio-Maxmilhas-Patrick"
 }
 
 variable "aws_sqs_group" {
