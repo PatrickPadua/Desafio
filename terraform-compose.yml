@@ -7,7 +7,7 @@ services:
         ARG_AWS_ACCESS_KEY_ID: ARG_ACCESS_KEY_ID
         ARG_AWS_SECRET_ACCESS_KEY: ARG_SECRET_ACCESS_KEY
         ARG_DEFAULT_REGION: us-east-1
-    command: "terraform plan"
+    #command: "terraform plan"
     command: "terraform apply -no-color -auto-approve"
     #command: "terraform destroy -no-color -auto-approve"
     volumes:
