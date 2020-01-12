@@ -135,12 +135,15 @@ Obs: Este exemplo foi desenvolvido na  zona "us-east-1" (Leste dos EUA (Norte da
 ```
 
 2) Acessar o "AWS Systems Manager" > "Parameter Store" e criar 4 parêmetros do tipo string com os valores conforme a seguir:
-
+```
 ARG_ACCESS_KEY_ID = (Colocar o Access Key ID do usuario terraform)
-ARG_SECRET_ACCESS_KEY = (Colocar o Secret Key ID do usuario terraform)
-ACCESS_KEY_ID = (Colocar o Access Key ID do usuario aplicacao)
-SECRET_ACCESS_KEY = (Colocar o Secret Key ID do usuario aplicacao)
 
+ARG_SECRET_ACCESS_KEY = (Colocar o Secret Key ID do usuario terraform)
+
+ACCESS_KEY_ID = (Colocar o Access Key ID do usuario aplicacao)
+
+SECRET_ACCESS_KEY = (Colocar o Secret Key ID do usuario aplicacao)
+```
 3) Crie um bucket no S3 com o nome "Desafio-Maxmilhas-Patrick" com o comando abaixo:
 
 ```
@@ -149,15 +152,16 @@ aws s3 mb s3://Desafio-Maxmilhas-Patrick
 
 4) Executar o comando: 
 
+```
 make service
 ```
 
 Com o comando acima, executaremos o docker-compose fazendo o build da API, Worker e um node do Consul. Somente o serviço do Worker falhará e forçando a reinicialização do mesmo. Isso se dá pois ainda não temos a fila do SQS e GroupID definidos como Key Value no Consul. A aplicação 
 verifica se o endpoint definido existe e consome o valor que o Consul provê. 
 
-```
 5) Executar o comando: 
 
+```
 make infra
 ```
 
@@ -193,9 +197,17 @@ Este endpoint envia as sugestões para uma fila SQS, o serviço do Worker fará 
 
 # Troubleshoot
 
-Pode ser necessario rodar o comando "docker start Desafio_worker_1" caso não tenha container na porta 8080 em execução.
+Pode ser necessario rodar o comando abaixo, caso não tenha container na porta 8080 em execução.
+
+```
+docker start Desafio_worker_1
+```
 
 7) Para exclui a aplicação e limpar o ambiente, basta executar o comando abaixo.
+
 ```
 make clean
 ```
+Patrick Pádua
+eng.patrick@hotmail.com
+DevOps Engineer
