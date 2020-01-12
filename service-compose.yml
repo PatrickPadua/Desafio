@@ -1,0 +1,63 @@
+version: "3"
+services:
+  api:
+    build: ./api
+    environment:
+      - AUTH=no
+      - AWS_REGION=us-east-1
+      - CONSUL_HOST=http://consul:8500
+      - CONSUL_SQS_URL_KV=/v1/kv/sqs/url
+      - CONSUL_SQS_GROUP_KV=/v1/kv/sqs/group
+      - MONGODB_HOST=mongo
+      - MONGODB_DATABASE=example
+      - MONGODB_COLLECTION_NAME=suggestion
+      - AWS_ACCESS_KEY_ID=ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY=SECRET_ACCESS_KEY
+      - AWS_DEFAULT_REGION=us-east-1
+    ports:
+      - "8080:8080"
+    links:
+      - consul
+      - mongo
+    networks:
+      - worker-db
+  worker:
+    build: ./worker
+    environment:
+      - AWS_REGION=us-east-1
+      - CONSUL_HOST=http://consul:8500
+      - CONSUL_ENDPOINT=/v1/kv/sqs/url
+      - MONGODB_HOST=mongo
+      - MONGODB_DATABASE=example
+      - MONGODB_COLLECTION_NAME=suggestion
+      - AWS_ACCESS_KEY_ID=ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY=SECRET_ACCESS_KEY
+      - AWS_DEFAULT_REGION=us-east-1
+    links:
+      - consul
+      - mongo
+    networks:
+      - worker-db
+    restart: always
+  consul:
+    image: "consul"
+    hostname: "consul"
+    command: "agent -dev -client 0.0.0.0"
+    ports:
+      - "8300:8300"
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:53/udp"
+    networks:
+      - worker-db
+  mongo:
+    image: 'mongo:latest'
+    environment:
+      - AUTH=no
+    ports:
+      - "27017:27017"
+      - "28017:28017"
+    networks:
+      - worker-db
+networks:
+  worker-db:
